@@ -109,9 +109,9 @@ class LogAnalyzer {
 		fclose($fp);
 
 	    // Make sure a value is defined for every bar, and optionnaly change units
-	    if ($this->nb_requests > 0) {
+	    if ($this->requests_total > 0) {
 		    for ($index = $index_min; $index <= $index_max; $index += $histo_period) {
-		    	
+
 		    	// Requests
 		    	if (!isset($this->requests_histo[$index])) {
 		    		$this->requests_histo[$index] = 0;
@@ -136,6 +136,12 @@ class LogAnalyzer {
 		    	}
 		    }
 		}
+		// sort histo by timestamp
+		ksort($this->requests_histo);
+		ksort($this->bytes_histo);
+		ksort($this->requests404_histo);
+		ksort($this->speed_histo);
+
 
 		// Keep only the N top values for requests
 		arsort($this->requests_list);
