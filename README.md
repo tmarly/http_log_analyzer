@@ -9,7 +9,7 @@ Analyze HTTP logs and display histograms and stats about the requests, in order 
 Snapshot
 --------
 
-![screenshot](/doc/screenshot.png "Screenshot")
+![screenshot](/tmarly/http_log_analyzer/raw/master/doc/screenshot.png "Screenshot")
 
 Installation
 ------------
