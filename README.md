@@ -4,7 +4,14 @@ HTTP Log Analyzer
 
 Analyze HTTP logs and display histograms and stats about the requests, in order to identify main problematic urls.
 
-![screenshot](/tmarly/http_log_analyzer/raw/master/doc/screenshot.png "Screenshot")
+Statistics includes:
+ * URLs
+ * 404 pages
+ * Volume
+ * IP
+ * User Agents
+
+![screenshot](doc/screenshot.png "Screenshot")
 
 Installation
 ------------
