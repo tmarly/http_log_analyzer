@@ -1,20 +1,15 @@
 HTTP Log Analyzer
 =================
 
-Goal
-----
 
 Analyze HTTP logs and display histograms and stats about the requests, in order to identify main problematic urls.
-
-Snapshot
---------
 
 ![screenshot](/tmarly/http_log_analyzer/raw/master/doc/screenshot.png "Screenshot")
 
 Installation
 ------------
 
-Donwload the code at tmarly/http_log_analyzer/downloads, or use the git repository.
+Donwload the code or use the git repository.
 
 The default install is configured to read the default combined Apache2 log format, but you can adjust the parser by editing config.inc.php
 

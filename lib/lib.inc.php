@@ -33,6 +33,12 @@ class LogAnalyzer {
 	/** total consummed time */
 	private $speed_total = 0;
 
+	/** list of IPs */
+	private $ip_list = array();
+
+	/** list of User Agents */
+	private $ua_list = array();
+
 	/** counter used to give a new id for each new graph */
 	private static $nb_histo_displayed = 0;
 
@@ -42,12 +48,15 @@ class LogAnalyzer {
 	 * @param $histo_dela In seconds.
 	 * @param $url_filter regexp, or false if no regexp.
 	 */
-	public function __construct($filename,$url_filter, $histo_period) {
+	public function __construct($filename,$url_filter, $log_filter, $histo_period) {
 		global $config;
 
 		// make a PECL regexp
 		if ($url_filter !== false) {
 			$url_filter = '/' . $url_filter . '/';
+		}
+		if ($log_filter !== false) {
+			$log_filter = '/' . $log_filter . '/';
 		}
 
 		// Convert string => int ! and store it for later
@@ -64,12 +73,16 @@ class LogAnalyzer {
 		$datetime_format = $config['log_format']['date_format'] . ' ' . $config['log_format']['time_format'] . ' ' . $config['log_format']['tz_format'];
 		$i_max = max($config['log_format']['url_index'], $config['log_format']['date_index'], $config['log_format']['time_index'], $config['log_format']['tz_index'], $config['log_format']['bytes_index'], $config['log_format']['status_index']);
 		while (($log = fgets($fp)) !== false) {
+			if ($log_filter !== false && preg_match($log_filter, $log) == 0) {
+				continue;
+			}
 			$matches = array();
 			$regex = $config['log_format']['regexp'];
 			preg_match($regex ,$log, $matches);
 
 			// is it an interesting log ?
-			if (count($matches) > $i_max && ($url_filter == false || preg_match($url_filter, $matches[$config['log_format']['url_index']]) > 0)) {
+			$nb_matches = count($matches);
+			if ($nb_matches > $i_max && ($url_filter == false || preg_match($url_filter, $matches[$config['log_format']['url_index']]) > 0)) {
 		
 				// compute the timestamp
 				$timestamp = DateTime::createFromFormat($datetime_format, $matches[$config['log_format']['date_index']] . " " . $matches[$config['log_format']['time_index']] . " " . $matches[$config['log_format']['tz_index']])->getTimestamp();
@@ -88,10 +101,12 @@ class LogAnalyzer {
 				$this->requests_total++;
 
 				// Bytes
-				$bytes = intval($matches[$config['log_format']['bytes_index']]);
-				$this->bytes_histo[$index] += $bytes;
-				$this->bytes_list[$url] += $bytes;
-				$this->bytes_total += $bytes;
+				if ($config['log_format']['bytes_index'] >= 0) {
+					$bytes = intval($matches[$config['log_format']['bytes_index']]);
+					$this->bytes_histo[$index] += $bytes;
+					$this->bytes_list[$url] += $bytes;
+					$this->bytes_total += $bytes;
+				}
 
 				// 404
 				if ($matches[$config['log_format']['status_index']] == '404') {
@@ -100,11 +115,32 @@ class LogAnalyzer {
 					$this->requests404_total++;
 				}
 
+				// IPs
+				$ip = $matches[$config['log_format']['ip_index']];
+				if (!isset($this->ip_list[$ip])) {
+					$this->ip_list[$ip] = 0;
+				}
+				$this->ip_list[$ip]++;
+
+				// User Agents
+				$ua = $matches[$config['log_format']['ua_index']];
+				if (!isset($this->ua_list[$ua])) {
+					$this->ua_list[$ua] = 0;
+				}
+				$this->ua_list[$ua]++;
+
+
 				// security
 				if (count($this->requests_histo) > $config['nb_bars_max']) {
 					throw new Exception("Too many columns in the graph, please increase the Histogram Period");
 				}
-			}
+			} 
+//else {
+//	echo "<pre>";
+//	var_dump($nb_matches);
+//	var_dump($log);
+//	echo "</pre><br/>";
+//}
 	    }
 		fclose($fp);
 
@@ -142,7 +178,6 @@ class LogAnalyzer {
 		ksort($this->requests404_histo);
 		ksort($this->speed_histo);
 
-
 		// Keep only the N top values for requests
 		arsort($this->requests_list);
 		$this->requests_list = array_slice($this->requests_list, 0, $config['nb_top_results'], true);
@@ -158,6 +193,14 @@ class LogAnalyzer {
 		// Keep only the N top values for 404
 		arsort($this->requests404_list);
 		$this->requests404_list = array_slice($this->requests404_list, 0, $config['nb_top_results'], true);
+
+		// Keep only the N top values for IPs
+		arsort($this->ip_list, SORT_NUMERIC);
+		$this->ip_list = array_slice($this->ip_list, 0, $config['nb_top_results'], true);
+
+		// Keep only the N top values for User Agetns
+		arsort($this->ua_list, SORT_NUMERIC);
+		$this->ua_list = array_slice($this->ua_list, 0, $config['nb_top_results'], true);
 
 	}
 
@@ -197,7 +240,6 @@ class LogAnalyzer {
 		// Ok, time to display data !
 		?>
 			<script type="text/javascript">
-		      google.load("visualization", "1", {packages:["corechart"]});
 		      google.setOnLoadCallback(drawHisto<?php echo LogAnalyzer::$nb_histo_displayed; ?>);
 		      function drawHisto<?php echo LogAnalyzer::$nb_histo_displayed; ?>() {
 		        var data = google.visualization.arrayToDataTable(<?php echo $data_js; ?>);	
@@ -309,5 +351,19 @@ class LogAnalyzer {
 	 */
 	public function getSpeedTotal() {
 		return $this->speed_total;
+	}
+
+	/**
+	 * @return the ip list
+	 */
+	public function getIpList() {
+		return $this->ip_list;
+	}
+
+	/**
+	 * @return the user agent list
+	 */
+	public function getUaList() {
+		return $this->ua_list;
 	}
 }

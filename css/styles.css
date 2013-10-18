@@ -8,6 +8,9 @@
 table .occurences {
 	text-align: right;
 }
+#print-page {
+  margin-left: 30px;
+}
 
 .subnav {
   width: 100%;

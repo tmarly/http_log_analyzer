@@ -3,7 +3,10 @@
 /*
  * HTTP Log Format Definition
  */
-$config['log_format']['regexp'] = '/^(\S+) (\S+) (\S+) \[([^:]+):(\d+:\d+:\d+) ([^\]]+)\] \"(\S+) (.*?) (\S+)\" (\S+) (\S+) "([^"]*)" "([^"]*)"$/';
+//$config['log_format']['regexp'] = '/^(\S+) (\S+) (\S+) \[([^:]+):(\d+:\d+:\d+) ([^\]]+)\] \"(\S+) (.*?) (\S+)\" (\S+) (\S+)/';
+$config['log_format']['regexp'] =   '/^(\S+) (\S+) (\S+) \[([^:]+):(\d+:\d+:\d+) ([^\]]+)\] \"(\S+) (.*?) (\S+)\" (\S+) (\S+) (\S+) (.*)/';
+$config['log_format']['ip_index'] = 1;
+$config['log_format']['ua_index'] = 13;
 $config['log_format']['date_index'] = 4;
 $config['log_format']['date_format'] = 'd/M/Y';
 $config['log_format']['time_index'] = 5;
