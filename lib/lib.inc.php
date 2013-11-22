@@ -48,7 +48,7 @@ class LogAnalyzer {
 	 * @param $histo_dela In seconds.
 	 * @param $url_filter regexp, or false if no regexp.
 	 */
-	public function __construct($filename,$url_filter, $log_filter, $histo_period) {
+	public function __construct($filename,$url_filter, $log_filter, $start_date, $end_date, $histo_period) {
 		global $config;
 
 		// make a PECL regexp
@@ -58,6 +58,9 @@ class LogAnalyzer {
 		if ($log_filter !== false) {
 			$log_filter = '/' . $log_filter . '/';
 		}
+
+		$start_date = $start_date ? DateTime::createFromFormat('d/m/Y H:i', $start_date)->getTimestamp() : 0;
+		$end_date = $end_date ? DateTime::createFromFormat('d/m/Y H:i', $end_date)->getTimestamp() : PHP_INT_MAX;
 
 		// Convert string => int ! and store it for later
 		$histo_period = intval($histo_period);
@@ -70,7 +73,7 @@ class LogAnalyzer {
 		}
 		$index_min = PHP_INT_MAX;
 		$index_max = 0;
-		$datetime_format = $config['log_format']['date_format'] . ' ' . $config['log_format']['time_format'] . ' ' . $config['log_format']['tz_format'];
+		$datetime_format = $config['log_format']['date_format'] . ' ' . $config['log_format']['time_format'] /*. ' ' . $config['log_format']['tz_format']*/;
 		$i_max = max($config['log_format']['url_index'], $config['log_format']['date_index'], $config['log_format']['time_index'], $config['log_format']['tz_index'], $config['log_format']['bytes_index'], $config['log_format']['status_index']);
 		while (($log = fgets($fp)) !== false) {
 			if ($log_filter !== false && preg_match($log_filter, $log) == 0) {
@@ -85,54 +88,56 @@ class LogAnalyzer {
 			if ($nb_matches > $i_max && ($url_filter == false || preg_match($url_filter, $matches[$config['log_format']['url_index']]) > 0)) {
 		
 				// compute the timestamp
-				$timestamp = DateTime::createFromFormat($datetime_format, $matches[$config['log_format']['date_index']] . " " . $matches[$config['log_format']['time_index']] . " " . $matches[$config['log_format']['tz_index']])->getTimestamp();
+				$timestamp = DateTime::createFromFormat($datetime_format, $matches[$config['log_format']['date_index']] . " " . $matches[$config['log_format']['time_index']] /* . " " . $matches[$config['log_format']['tz_index']] */)->getTimestamp();
 
-				// Compute the column (bar) number
-				$index = floor($timestamp / $histo_period) * $histo_period;
-				$index_min = min($index_min, $index);
-				$index_max = max($index_max, $index);
-				
-				// Ok, now we store all data
-				$url = $matches[$config['log_format']['url_index']];
-				
-				// Requests
-				$this->requests_histo[$index]++;
-				$this->requests_list[$url]++;
-				$this->requests_total++;
+				if ($timestamp >= $start_date && $timestamp <= $end_date) {
+					// Compute the column (bar) number
+					$index = floor($timestamp / $histo_period) * $histo_period;
+					$index_min = min($index_min, $index);
+					$index_max = max($index_max, $index);
+					
+					// Ok, now we store all data
+					$url = $matches[$config['log_format']['url_index']];
+					
+					// Requests
+					$this->requests_histo[$index]++;
+					$this->requests_list[$url]++;
+					$this->requests_total++;
 
-				// Bytes
-				if ($config['log_format']['bytes_index'] >= 0) {
-					$bytes = intval($matches[$config['log_format']['bytes_index']]);
-					$this->bytes_histo[$index] += $bytes;
-					$this->bytes_list[$url] += $bytes;
-					$this->bytes_total += $bytes;
-				}
+					// Bytes
+					if ($config['log_format']['bytes_index'] >= 0) {
+						$bytes = intval($matches[$config['log_format']['bytes_index']]);
+						$this->bytes_histo[$index] += $bytes;
+						$this->bytes_list[$url] += $bytes;
+						$this->bytes_total += $bytes;
+					}
 
-				// 404
-				if ($matches[$config['log_format']['status_index']] == '404') {
-					$this->requests404_histo[$index]++;
-					$this->requests404_list[$url]++;
-					$this->requests404_total++;
-				}
+					// 404
+					if ($matches[$config['log_format']['status_index']] == '404') {
+						$this->requests404_histo[$index]++;
+						$this->requests404_list[$url]++;
+						$this->requests404_total++;
+					}
 
-				// IPs
-				$ip = $matches[$config['log_format']['ip_index']];
-				if (!isset($this->ip_list[$ip])) {
-					$this->ip_list[$ip] = 0;
-				}
-				$this->ip_list[$ip]++;
+					// IPs
+					$ip = $matches[$config['log_format']['ip_index']];
+					if (!isset($this->ip_list[$ip])) {
+						$this->ip_list[$ip] = 0;
+					}
+					$this->ip_list[$ip]++;
 
-				// User Agents
-				$ua = $matches[$config['log_format']['ua_index']];
-				if (!isset($this->ua_list[$ua])) {
-					$this->ua_list[$ua] = 0;
-				}
-				$this->ua_list[$ua]++;
+					// User Agents
+					$ua = $matches[$config['log_format']['ua_index']];
+					if (!isset($this->ua_list[$ua])) {
+						$this->ua_list[$ua] = 0;
+					}
+					$this->ua_list[$ua]++;
 
 
-				// security
-				if (count($this->requests_histo) > $config['nb_bars_max']) {
-					throw new Exception("Too many columns in the graph, please increase the Histogram Period");
+					// security
+					if (count($this->requests_histo) > $config['nb_bars_max']) {
+						throw new Exception("Too many columns in the graph, please increase the Histogram Period");
+					}
 				}
 			} 
 //else {
