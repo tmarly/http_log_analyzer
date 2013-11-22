@@ -263,11 +263,15 @@ class LogAnalyzer {
 	 * Display a detailed table
 	 * (@TODO in fact, has nothing to do in this class I guess :)
 	 */
-	public function displayTable($array, $total, $legend) {
+	public function displayTable($array, $total, $legend, $urlstrict) {
 		echo '<table class="table  table-bordered table-striped table-condensed"><thead><tr><th>URL</th><th>' . htmlentities($legend) . '</th></thead><tbody>';
-		foreach($array as $url => $nb) {
-			$drill_down_url = $_SERVER['PHP_SELF'] . '?logpath=' . urlencode($_GET['logpath']) . '&urlfilter=' . urlencode('^' . preg_quote($url, '/') . '$') . '&histo_period=' . $_GET['histo_period'];
-			echo '<tr><td><a title="drill down" href="' . $drill_down_url . '">' . $url . '</a></td><td class="occurences">' . $nb . '</td></tr>';
+		foreach($array as $label => $nb) {
+            if ($urlstrict) {
+			    $drill_down_url = $_SERVER['PHP_SELF'] . '?logpath=' . urlencode($_GET['logpath']) . '&urlfilter=' . urlencode('^' . preg_quote($label, '/') . '$') . '&histo_period=' . $_GET['histo_period']  . '&start_date=' . $_GET['start_date']  . '&end_date=' . $_GET['end_date']  . '&logfilter=' . $_GET['logfilter'] ;
+            } else {
+                $drill_down_url = $_SERVER['PHP_SELF'] . '?logpath=' . urlencode($_GET['logpath']) . '&logfilter=' . urlencode(preg_quote($label, '/')) . '&histo_period=' . $_GET['histo_period']  . '&start_date=' . $_GET['start_date']  . '&end_date=' . $_GET['end_date']  . '&urlfilter=' . $_GET['urlfilter'] ;
+            }
+			echo '<tr><td><a title="drill down" href="' . $drill_down_url . '">' . $label . '</a></td><td class="occurences">' . $nb . '</td></tr>';
 		}
 		echo '<tr><th>Total</th><th class="occurences">' . $total . '</th></tr>';
 		echo '</tbody></table>';
