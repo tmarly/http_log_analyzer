@@ -1,5 +1,6 @@
 <?php
 require_once('config.inc.php');
+require_once('lib/useragent.php');
 
 class LogAnalyzer {
 	/** Number of seconds used to represent one bar of the histo */
@@ -38,6 +39,9 @@ class LogAnalyzer {
 
 	/** list of User Agents */
 	private $ua_list = array();
+
+	/** list of Suspicious User Agents */
+	private $suspicious_ua_list = array();
 
 	/** counter used to give a new id for each new graph */
 	private static $nb_histo_displayed = 0;
@@ -140,12 +144,6 @@ class LogAnalyzer {
 					}
 				}
 			} 
-//else {
-//	echo "<pre>";
-//	var_dump($nb_matches);
-//	var_dump($log);
-//	echo "</pre><br/>";
-//}
 	    }
 		fclose($fp);
 
@@ -205,6 +203,7 @@ class LogAnalyzer {
 
 		// Keep only the N top values for User Agetns
 		arsort($this->ua_list, SORT_NUMERIC);
+        $this->suspicious_ua_list = get_suspicious_ua_list($this->ua_list, $config['nb_top_results']);
 		$this->ua_list = array_slice($this->ua_list, 0, $config['nb_top_results'], true);
 
 	}
@@ -218,7 +217,7 @@ class LogAnalyzer {
 	 * @param $color
 	 */
 	public function addHistoJS($histo, $legend, $div_name, $color) {
-		$nb_histo_displayed++;
+		LogAnalyzer::$nb_histo_displayed++;
 
 		// No data => no graph !
 		if (count($histo) == 0) {
@@ -371,4 +370,13 @@ class LogAnalyzer {
 	public function getUaList() {
 		return $this->ua_list;
 	}
+
+	/**
+	 * @return the suspicious user agent list
+	 */
+	public function getSuspiciousUaList() {
+		return $this->suspicious_ua_list;
+	}
+
+
 }

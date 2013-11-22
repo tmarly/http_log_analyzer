@@ -54,6 +54,7 @@ if (isset($_GET['logpath'])) {
 	if (trim($end_date) == '') {
 		$end_date = false;
 	}
+
 	require_once('lib/lib.inc.php');
 	try {
 		$log = new LogAnalyzer($_GET['logpath'], $url_filter, $log_filter, $start_date, $end_date, $_GET['histo_period']);

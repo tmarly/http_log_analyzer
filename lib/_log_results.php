@@ -5,6 +5,7 @@
 		<li><a href='#report-requests404'>Requests 404</a></li>
 		<li><a href='#report-ip'>IP</a></li>
 		<li><a href='#report-ua'>User Agents</a></li>
+		<li><a href='#report-suspicious-ua'>Suspicious User Agents</a></li>
 	</ul>
 </div>
 
@@ -41,4 +42,9 @@
 <section id='report-ua'>
 	<div class="page-header"><h1>User Agents</h1></div>
 	<?php $log->displayTable($log->getUaList(), $log->getRequestsTotal(), 'Nb requests'); ?>
+</section>
+
+<section id='report-suspicious-ua'>
+	<div class="page-header"><h1>Suspicious User Agents</h1></div>
+	<?php $log->displayTable($log->getSuspiciousUaList(), $log->getRequestsTotal(), 'Nb requests'); ?>
 </section>
