@@ -226,7 +226,7 @@ class LogAnalyzer {
 		}
 
 		// The time format is not the same depending on the scale
-		$data_js = '[[\'Time\', \'' . $legend . '\']';
+		$data_js = '[[\'Time\', \'' . $legend . '\',{type:\'string\', role:\'tooltip\'}]';
 		if ($this->histo_period < 60) {
 			$format = "H:i:s";
 		} else if ($this->histo_period < 3600) {
@@ -237,7 +237,8 @@ class LogAnalyzer {
 
 		// Construct a string containing a javascript declaration of the array contianing data
 		foreach($histo as $timestamp => $column) {
-			$data_js .= ', [\'' . date($format, $timestamp) . '\', ' . $column . ']';
+			$tooltip = date("d/m/Y ".$format, $timestamp)." : ".$column." ".$legend;
+			$data_js .= ', [\'' . date($format, $timestamp) . '\', ' . $column . ',\''.$tooltip.'\']';
 		}
 		$data_js .= ']';
 
