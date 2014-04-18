@@ -55,7 +55,7 @@ class LogAnalyzer {
 	public function __construct($filename,$url_filter, $log_filter, $nodep, $start_date, $end_date, $histo_period) {
 		global $config;
 		
-		$deps = array(".jpg", ".gif", ".png", ".bmp", ".jpeg", ".css", ".js", ".svg");
+		$deps = array(".jpg", ".gif", ".png", ".bmp", ".jpeg", ".css", ".js", ".svg", ".ico", ".eot", ".woff", ".pdf", ".doc", ".xls", ".ppt");
 
 		// make a PECL regexp
 		if ($url_filter !== false) {
