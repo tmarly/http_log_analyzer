@@ -52,8 +52,10 @@ class LogAnalyzer {
 	 * @param $histo_dela In seconds.
 	 * @param $url_filter regexp, or false if no regexp.
 	 */
-	public function __construct($filename,$url_filter, $log_filter, $start_date, $end_date, $histo_period) {
+	public function __construct($filename,$url_filter, $log_filter, $nodep, $start_date, $end_date, $histo_period) {
 		global $config;
+		
+		$deps = array(".jpg", ".gif", ".png", ".bmp", ".jpeg", ".css", ".js", ".svg");
 
 		// make a PECL regexp
 		if ($url_filter !== false) {
@@ -83,6 +85,20 @@ class LogAnalyzer {
 			if ($log_filter !== false && preg_match($log_filter, $log) == 0) {
 				continue;
 			}
+
+			if ($nodep) {
+				$thisIsADep = false;
+				foreach($deps as $dep) {
+					if (stripos($log, $dep) !== false) {
+						$thisIsADep=true;
+						break; // break foreach
+					}
+				}
+				if ($thisIsADep) {
+					continue;
+				}
+			}
+
 			$matches = array();
 			$regex = $config['log_format']['regexp'];
 			preg_match($regex ,$log, $matches);
@@ -268,9 +284,9 @@ class LogAnalyzer {
 		echo '<table class="table  table-bordered table-striped table-condensed"><thead><tr><th>URL</th><th>' . htmlentities($legend) . '</th></thead><tbody>';
 		foreach($array as $label => $nb) {
             if ($urlstrict) {
-			    $drill_down_url = $_SERVER['PHP_SELF'] . '?logpath=' . urlencode($_GET['logpath']) . '&urlfilter=' . urlencode('^' . preg_quote($label, '/') . '$') . '&histo_period=' . $_GET['histo_period']  . '&start_date=' . $_GET['start_date']  . '&end_date=' . $_GET['end_date']  . '&logfilter=' . $_GET['logfilter'] ;
+			    $drill_down_url = $_SERVER['PHP_SELF'] . '?logpath=' . urlencode($_GET['logpath']) . '&urlfilter=' . urlencode('^' . preg_quote($label, '/') . '$') . '&histo_period=' . $_GET['histo_period']  . '&start_date=' . $_GET['start_date']  . '&end_date=' . $_GET['end_date']  . '&logfilter=' . $_GET['logfilter']  . '&nodep=' . $_GET['nodep'];
             } else {
-                $drill_down_url = $_SERVER['PHP_SELF'] . '?logpath=' . urlencode($_GET['logpath']) . '&logfilter=' . urlencode(preg_quote($label, '/')) . '&histo_period=' . $_GET['histo_period']  . '&start_date=' . $_GET['start_date']  . '&end_date=' . $_GET['end_date']  . '&urlfilter=' . $_GET['urlfilter'] ;
+                $drill_down_url = $_SERVER['PHP_SELF'] . '?logpath=' . urlencode($_GET['logpath']) . '&logfilter=' . urlencode(preg_quote($label, '/')) . '&histo_period=' . $_GET['histo_period']  . '&start_date=' . $_GET['start_date']  . '&end_date=' . $_GET['end_date']  . '&urlfilter=' . $_GET['urlfilter'] . '&nodep=' . $_GET['nodep'];
             }
 			echo '<tr><td><a title="drill down" href="' . $drill_down_url . '">' . $label . '</a></td><td class="occurences">' . $nb . '</td></tr>';
 		}

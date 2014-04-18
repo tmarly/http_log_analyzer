@@ -22,6 +22,8 @@
 		<label>URL Filter (regexp)</label>
 		<input type='text' class='span5' name='urlfilter' value='<?php echo $_GET['urlfilter'] ?>' />
 		<span class="help-block">Example: \.jpg$</span>
+		<label>Exclude dependencies</label>
+		<input type='checkbox' class='span1' name='nodep' value='1' <?php if (isset($_GET['nodep']) && $_GET['nodep'] == '1') {echo 'checked';} ?> />
 		<label>Log Filter (regexp)</label>
 		<input type='text' class='span5' name='logfilter' value='<?php echo $_GET['logfilter'] ?>' />
 		<span class="help-block">Example: Mozilla</span>
@@ -46,6 +48,9 @@ if (isset($_GET['logpath'])) {
 	if (trim($log_filter) == '') {
 		$log_filter = false;
 	}
+
+	$nodep = isset($_GET['nodep']) ? $_GET['nodep'] == '1' : false;
+
 	$start_date = isset($_GET['start_date']) ? $_GET['start_date'] : '';
 	if (trim($start_date) == '') {
 		$start_date = false;
@@ -57,7 +62,7 @@ if (isset($_GET['logpath'])) {
 
 	require_once('lib/lib.inc.php');
 	try {
-		$log = new LogAnalyzer($_GET['logpath'], $url_filter, $log_filter, $start_date, $end_date, $_GET['histo_period']);
+		$log = new LogAnalyzer($_GET['logpath'], $url_filter, $log_filter, $nodep, $start_date, $end_date, $_GET['histo_period']);
 		include('lib/_log_results.php');
 	} catch (Exception $e) {
 	   echo "<div class='alert alert-error'> Error: " . $e->getMessage() . "</div>";
