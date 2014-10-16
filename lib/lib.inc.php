@@ -128,7 +128,7 @@ class LogAnalyzer {
 					if ($config['log_format']['bytes_index'] >= 0) {
 						$bytes = intval($matches[$config['log_format']['bytes_index']]);
 						$this->bytes_histo[$index] += $bytes;
-						$this->bytes_list[] += $bytes;
+						$this->bytes_list[$url] += $bytes;
 						$this->bytes_total += $bytes;
 					}
 
