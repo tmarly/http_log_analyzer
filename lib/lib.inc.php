@@ -128,7 +128,7 @@ class LogAnalyzer {
 					if ($config['log_format']['bytes_index'] >= 0) {
 						$bytes = intval($matches[$config['log_format']['bytes_index']]);
 						$this->bytes_histo[$index] += $bytes;
-						$this->bytes_list[$url] += $bytes;
+						$this->bytes_list[] += $bytes;
 						$this->bytes_total += $bytes;
 					}
 
@@ -141,6 +141,7 @@ class LogAnalyzer {
 
 					// IPs
 					$ip = $matches[$config['log_format']['ip_index']];
+$virgule = strpos($ip, ','); if ($virgule !== false) {$ip = substr($ip, 0, $virgule);}
 					if (!isset($this->ip_list[$ip])) {
 						$this->ip_list[$ip] = 0;
 					}
