@@ -120,12 +120,28 @@ class LogAnalyzer {
 					$url = $matches[$config['log_format']['url_index']];
 					
 					// Requests
+					if (!array_key_exists((int)$index, $this->requests_histo)) {
+						$this->requests_histo[$index] = 0;
+					}
+
+					if (!array_key_exists($url, $this->requests_list)) {
+						$this->requests_list[$url] = 0;
+					}
+
 					$this->requests_histo[$index]++;
 					$this->requests_list[$url]++;
 					$this->requests_total++;
 
 					// Bytes
 					if ($config['log_format']['bytes_index'] >= 0) {
+						if (!array_key_exists((int)$index, $this->bytes_histo)) {
+							$this->bytes_histo[$index] = 0;
+						}
+
+						if (!array_key_exists($url, $this->bytes_list)) {
+							$this->bytes_list[$url] = 0;
+						}
+
 						$bytes = intval($matches[$config['log_format']['bytes_index']]);
 						$this->bytes_histo[$index] += $bytes;
 						$this->bytes_list[$url] += $bytes;
@@ -134,6 +150,15 @@ class LogAnalyzer {
 
 					// 404
 					if ($matches[$config['log_format']['status_index']] == '404') {
+						if (!array_key_exists((int)$index, $this->requests404_histo)) {
+							$this->requests404_histo[$index] = 0;
+						}
+
+						if (!array_key_exists($url, $this->requests404_list)) {
+							$this->requests404_list[$url] = 0;
+						}
+
+
 						$this->requests404_histo[$index]++;
 						$this->requests404_list[$url]++;
 						$this->requests404_total++;
@@ -141,7 +166,10 @@ class LogAnalyzer {
 
 					// IPs
 					$ip = $matches[$config['log_format']['ip_index']];
-$virgule = strpos($ip, ','); if ($virgule !== false) {$ip = substr($ip, 0, $virgule);}
+					$virgule = strpos($ip, ',');
+ 					
+ 					if ($virgule !== false) {$ip = substr($ip, 0, $virgule);}
+
 					if (!isset($this->ip_list[$ip])) {
 						$this->ip_list[$ip] = 0;
 					}
@@ -284,11 +312,64 @@ $virgule = strpos($ip, ','); if ($virgule !== false) {$ip = substr($ip, 0, $virg
 	public function displayTable($array, $total, $legend, $urlstrict) {
 		echo '<table class="table  table-bordered table-striped table-condensed"><thead><tr><th>URL</th><th>' . htmlentities($legend) . '</th></thead><tbody>';
 		foreach($array as $label => $nb) {
+			$urlPart = array($_SERVER['PHP_SELF']);
+
             if ($urlstrict) {
-			    $drill_down_url = $_SERVER['PHP_SELF'] . '?logpath=' . urlencode($_GET['logpath']) . '&urlfilter=' . urlencode('^' . preg_quote($label, '/') . '$') . '&histo_period=' . $_GET['histo_period']  . '&start_date=' . $_GET['start_date']  . '&end_date=' . $_GET['end_date']  . '&logfilter=' . $_GET['logfilter']  . '&nodep=' . $_GET['nodep'];
+				$urlPart[] = '?logpath=';
+				$urlPart[] = urlencode($_GET['logpath']);
+
+				$urlPart[] = '&urlfilter=';
+				$urlPart[] = urlencode('^' . preg_quote($label, '/') . '$');
+
+				if (isset($_GET['histo_period'])) {
+					$urlPart[] = '&histo_period=';
+					$urlPart[] = $_GET['histo_period'];
+				}
+
+				if (isset($_GET['start_date'])) {
+					$urlPart[] = '&start_date=';
+					$urlPart[] = $_GET['start_date'];
+				}
+
+				if (isset($_GET['logfilter'])) {
+					$urlPart[] = '&logfilter=';
+					$urlPart[] = $_GET['logfilter'];
+				}
+
+				if (isset($_GET['nodep'])) {
+					$urlPart[] = '&nodep=';
+					$urlPart[] = $_GET['nodep'];
+				}
+
             } else {
-                $drill_down_url = $_SERVER['PHP_SELF'] . '?logpath=' . urlencode($_GET['logpath']) . '&logfilter=' . urlencode(preg_quote($label, '/')) . '&histo_period=' . $_GET['histo_period']  . '&start_date=' . $_GET['start_date']  . '&end_date=' . $_GET['end_date']  . '&urlfilter=' . $_GET['urlfilter'] . '&nodep=' . $_GET['nodep'];
+				$urlPart[] = '?logpath=';
+				$urlPart[] = urlencode($_GET['logpath']);
+
+				if (isset($_GET['urlfilter'])) {
+					$urlPart[] = '&urlfilter=';
+					$urlPart[] = $_GET['urlfilter'];
+				}
+
+				if (isset($_GET['histo_period'])) {
+					$urlPart[] = '&histo_period=';
+					$urlPart[] = $_GET['histo_period'];
+				}
+
+				if (isset($_GET['start_date'])) {
+					$urlPart[] = '&start_date=';
+					$urlPart[] = $_GET['start_date'];
+				}
+
+				$urlPart[] = '&logfilter=';
+				$urlPart[] = urlencode(preg_quote($label, '/'));
+
+				if (isset($_GET['nodep'])) {
+					$urlPart[] = '&nodep=';
+					$urlPart[] = $_GET['nodep'];
+				}
             }
+
+            $drill_down_url =  implode($urlPart);
 			echo '<tr><td><a title="drill down" href="' . $drill_down_url . '">' . $label . '</a></td><td class="occurences">' . $nb . '</td></tr>';
 		}
 		echo '<tr><th>Total</th><th class="occurences">' . $total . '</th></tr>';

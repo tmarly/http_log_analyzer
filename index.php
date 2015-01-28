@@ -17,24 +17,24 @@
 <div class="container" id="form-log">
 	<form class='well form-vertical'>
 		<label>Path Apache Log</label>
-		<input type='text' class='span5' name='logpath' value='<?php echo $_GET['logpath']; ?>' />
+		<input type='text' class='span5' name='logpath' value='<?php echo isset($_GET['logpath']) ? $_GET['logpath'] : '' ?>' />
 		<span class="help-block">Example: /var/log/apache2/access.log</span>
 		<label>URL Filter (regexp)</label>
-		<input type='text' class='span5' name='urlfilter' value='<?php echo $_GET['urlfilter'] ?>' />
+		<input type='text' class='span5' name='urlfilter' value='<?php echo isset($_GET['urlfilter']) ? $_GET['urlfilter'] : '' ?>' />
 		<span class="help-block">Example: \.jpg$</span>
 		<label>Exclude dependencies</label>
-		<input type='checkbox' class='span1' name='nodep' value='1' <?php if (isset($_GET['nodep']) && $_GET['nodep'] == '1') {echo 'checked';} ?> />
+		<input type='checkbox' class='span1' name='nodep' value='1' <?php echo isset($_GET['nodep']) && $_GET['nodep'] == '1' ? 'checked' : '' ?> />
 		<label>Log Filter (regexp)</label>
-		<input type='text' class='span5' name='logfilter' value='<?php echo $_GET['logfilter'] ?>' />
+		<input type='text' class='span5' name='logfilter' value='<?php echo isset($_GET['logfilter']) ? $_GET['logfilter'] : '' ?>' />
 		<span class="help-block">Example: Mozilla</span>
 		<label>Start date</label>
-		<input type='text' class='span5' name='start_date' value='<?php echo $_GET['start_date']  ?>' /> 
+		<input type='text' class='span5' name='start_date' value='<?php echo isset($_GET['start_date']) ? $_GET['start_date'] : ''  ?>' /> 
 		<span class='help-block'>Example: 22/11/2013 08:00</span>
 		<label>End date</label>
-		<input type='text' class='span5' name='end_date' value='<?php echo $_GET['end_date']  ?>' /> 
+		<input type='text' class='span5' name='end_date' value='<?php echo isset($_GET['end_date']) ? $_GET['end_date'] : '' ?>' /> 
 		<span class='help-block'>Example: 22/11/2013 20:00</span>
 		<label>Histogram period</label>
-		<input type='text' class='span5' name='histo_period' value='<?php echo $_GET['histo_period'] ? $_GET['histo_period'] : '3600' ?>' /> sec.
+		<input type='text' class='span5' name='histo_period' value='<?php echo isset($_GET['histo_period']) ? $_GET['histo_period'] : '3600' ?>' /> sec.
 		<span class='help-block'></span>
 		<button type='submit' class='btn'>Analyze</button>
 	</form>
