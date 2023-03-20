@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  apachehisto_nginx:
+    image: apachehisto_nginx
+    container_name: apachehisto_nginx
+    
+    ports:
+        - 80:80
+
+    build:
+      context: docker
+      args:
+        UID: ${UID}
+        GID: ${GID}
+    volumes:
+      - .:/var/www/apache-histo:cached # cached: host is master
+      
