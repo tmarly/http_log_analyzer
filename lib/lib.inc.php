@@ -117,7 +117,7 @@ class LogAnalyzer {
 					$index_max = max($index_max, $index);
 					
 					// Ok, now we store all data
-					$url = $matches[$config['log_format']['url_index']];
+					$url = $matches[$config['log_format']['method_index']] . ' ' . $matches[$config['log_format']['url_index']];
 					
 					// Requests
 					if (!array_key_exists((int)$index, $this->requests_histo)) {
@@ -274,10 +274,10 @@ class LogAnalyzer {
 		$data_js = '[[\'Time\', \'' . $legend . '\',{type:\'string\', role:\'tooltip\'}]';
 		if ($this->histo_period < 60) {
 			$format = "H:i:s";
-		} else if ($this->histo_period < 3600) {
+		} else if ($this->histo_period < 86400) {
 			$format = "H:i";
 		} else {
-			$format = "H:i";
+			$format = "d/m";
 		}
 
 		// Construct a string containing a javascript declaration of the array contianing data
@@ -370,7 +370,7 @@ class LogAnalyzer {
             }
 
             $drill_down_url =  implode($urlPart);
-			echo '<tr><td><a title="drill down" href="' . $drill_down_url . '">' . $label . '</a></td><td class="occurences">' . $nb . '</td></tr>';
+			echo '<tr><td class="col-first"><a title="drill down" href="' . $drill_down_url . '">' . $label . '</a></td><td class="occurences">' . $nb . '</td></tr>';
 		}
 		echo '<tr><th>Total</th><th class="occurences">' . $total . '</th></tr>';
 		echo '</tbody></table>';

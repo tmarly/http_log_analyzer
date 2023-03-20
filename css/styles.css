@@ -68,3 +68,6 @@ table .occurences {
 .subnav .nav > li:last-child > a {
   border-right: 0;
 }
+.col-first {
+    max-width: 300px;
+}
