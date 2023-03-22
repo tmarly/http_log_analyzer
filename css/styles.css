@@ -5,8 +5,11 @@
 #body table {
 	font-size: 13px;
 }
-table .occurences {
+table td.col-data {
 	text-align: right;
+}
+table th.col-data {
+    text-align: right;
 }
 #print-page {
   margin-left: 30px;
@@ -69,5 +72,10 @@ table .occurences {
   border-right: 0;
 }
 .col-first {
-    max-width: 300px;
+    /*max-width: 300px;*/
+    overflow-wrap: break-word;
+}
+.col-first a {
+    /*max-width: 300px;*/
+    overflow-wrap: break-word;
 }

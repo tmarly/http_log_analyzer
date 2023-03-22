@@ -7,17 +7,17 @@ if [ "$(uname)" == "Darwin" ]; then
   HOST_IP=10.254.254.254
 #Linux
 else
-  HOST_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.Gateway}}{{end}}' autoies_nginx)
+  HOST_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.Gateway}}{{end}}' apachehisto_nginx)
 fi
 
 
 
 # Enable the extension
-docker exec autoies_nginx sudo sed -i "s/%HOST_IP%/$HOST_IP/g" /etc/php/8.1/mods-available/xdebug.ini.dist
-docker exec autoies_nginx sudo cp -f /etc/php/8.1/mods-available/xdebug.ini.dist /etc/php/8.1/mods-available/xdebug.ini
+docker exec apachehisto_nginx sudo sed -i "s/%HOST_IP%/$HOST_IP/g" /etc/php/8.1/mods-available/xdebug.ini.dist
+docker exec apachehisto_nginx sudo cp -f /etc/php/8.1/mods-available/xdebug.ini.dist /etc/php/8.1/mods-available/xdebug.ini
 
 # Restart fpm
-docker exec autoies_nginx sudo /etc/init.d/php8.1-fpm restart
+docker exec apachehisto_nginx sudo /etc/init.d/php8.1-fpm restart
 
 echo ""
 echo "XDebug enabled !"

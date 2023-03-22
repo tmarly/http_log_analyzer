@@ -3,9 +3,6 @@ zend_extension=xdebug.so
 xdebug.mode=debug
 
 xdebug.client_host=%HOST_IP%
-# This is not the default port for xdebug3, so we change it to make it
-# compliant with xdebug2 and phpstorm default settings
-xdebug.client_port=9000
 
 xdebug.idekey = PHPSTORM
 

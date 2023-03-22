@@ -1,6 +1,5 @@
 <?php
 require_once('config.inc.php');
-require_once('lib/useragent.php');
 
 class LogAnalyzer {
 	/** Number of seconds used to represent one bar of the histo */
@@ -40,8 +39,6 @@ class LogAnalyzer {
 	/** list of User Agents */
 	private $ua_list = array();
 
-	/** list of Suspicious User Agents */
-	private $suspicious_ua_list = array();
 
 	/** counter used to give a new id for each new graph */
 	private static $nb_histo_displayed = 0;
@@ -139,12 +136,16 @@ class LogAnalyzer {
 						}
 
 						if (!array_key_exists($url, $this->bytes_list)) {
-							$this->bytes_list[$url] = 0;
+							$this->bytes_list[$url] = [
+                                    'nb' => 0, // the order is important, for the display in table
+                                    'size' => 0,
+                            ];
 						}
 
 						$bytes = intval($matches[$config['log_format']['bytes_index']]);
 						$this->bytes_histo[$index] += $bytes;
-						$this->bytes_list[$url] += $bytes;
+                        $this->bytes_list[$url]['size'] += $bytes;
+                        $this->bytes_list[$url]['nb'] ++;
 						$this->bytes_total += $bytes;
 					}
 
@@ -231,11 +232,13 @@ class LogAnalyzer {
 		$this->requests_list = array_slice($this->requests_list, 0, $config['nb_top_results'], true);
 
 		// Keep only the N top values for volume
-		arsort($this->bytes_list);
+		uasort($this->bytes_list, function($item1, $item2) {
+            return $item1['size'] < $item2['size'];
+        });
 		$this->bytes_list = array_slice($this->bytes_list, 0, $config['nb_top_results'], true);
 		$this->bytes_total = round($this->bytes_total / 1024 / 1024); // byte => Mo
 		foreach($this->bytes_list as $url => $bytes) {
-			$this->bytes_list[$url] = round($bytes / 1024 / 1024);
+			$this->bytes_list[$url]['size'] = round($bytes['size'] / 1024 / 1024);
 		}
 
 		// Keep only the N top values for 404
@@ -248,7 +251,6 @@ class LogAnalyzer {
 
 		// Keep only the N top values for User Agetns
 		arsort($this->ua_list, SORT_NUMERIC);
-        $this->suspicious_ua_list = get_suspicious_ua_list($this->ua_list, $config['nb_top_results']);
 		$this->ua_list = array_slice($this->ua_list, 0, $config['nb_top_results'], true);
 
 	}
@@ -309,9 +311,19 @@ class LogAnalyzer {
 	 * Display a detailed table
 	 * (@TODO in fact, has nothing to do in this class I guess :)
 	 */
-	public function displayTable($array, $total, $legend, $urlstrict) {
-		echo '<table class="table  table-bordered table-striped table-condensed"><thead><tr><th>URL</th><th>' . htmlentities($legend) . '</th></thead><tbody>';
-		foreach($array as $label => $nb) {
+	public function displayTable($array, $total, $legends, $urlstrict) {
+		echo '<table class="table  table-bordered table-striped table-condensed"><thead><tr>';
+        $cpt = 0;
+        foreach($legends as $legend) {
+            $cpt++;
+            $class = "";
+            if ($cpt > 1) {
+                $class="col-data";
+            }
+            echo "<th class='$class'>" . htmlentities($legend) . '</th>';
+        }
+        echo '</thead><tbody>';
+        foreach($array as $label => $data) {
 			$urlPart = array($_SERVER['PHP_SELF']);
 
             if ($urlstrict) {
@@ -370,9 +382,19 @@ class LogAnalyzer {
             }
 
             $drill_down_url =  implode($urlPart);
-			echo '<tr><td class="col-first"><a title="drill down" href="' . $drill_down_url . '">' . $label . '</a></td><td class="occurences">' . $nb . '</td></tr>';
+            // Display the URL
+            echo '<tr><td class="col-first"><a title="drill down" href="' . $drill_down_url . '">' . $label . '</a></td>';
+            // Display the data, but let's check first if this is a multidimensional value
+            if (!is_array($data)) {
+                // no, so convert into multidimensional
+                $data = [ 'occurences' => $data ];
+            }
+            foreach($data as $column => $value) {
+                echo "<td class='col-data $column'>" . $value . '</td>';
+            }
+            echo '</tr>';
 		}
-		echo '<tr><th>Total</th><th class="occurences">' . $total . '</th></tr>';
+		echo '<tr><th colspan="' . (count($legends) - 1) . '">Total</th><th class="col-data">' . $total . '</th></tr>';
 		echo '</tbody></table>';
 	}
 
@@ -472,13 +494,6 @@ class LogAnalyzer {
 	 */
 	public function getUaList() {
 		return $this->ua_list;
-	}
-
-	/**
-	 * @return the suspicious user agent list
-	 */
-	public function getSuspiciousUaList() {
-		return $this->suspicious_ua_list;
 	}
 
 
