@@ -49,7 +49,7 @@ class LogAnalyzer {
 	 * @param $histo_dela In seconds.
 	 * @param $url_filter regexp, or false if no regexp.
 	 */
-	public function __construct($filename,$url_filter, $log_filter, $nodep, $start_date, $end_date, $histo_period) {
+	public function __construct($filename,$url_filter, $ua_filter, $ip_filter, $log_filter, $nodep, $start_date, $end_date, $histo_period) {
 		global $config;
 		
 		$deps = array(".jpg", ".gif", ".png", ".bmp", ".jpeg", ".css", ".js", ".svg", ".ico", ".eot", ".woff", ".pdf", ".doc", ".xls", ".ppt");
@@ -102,7 +102,11 @@ class LogAnalyzer {
 
 			// is it an interesting log ?
 			$nb_matches = count($matches);
-			if ($nb_matches > $i_max && ($url_filter == false || preg_match($url_filter, $matches[$config['log_format']['url_index']]) > 0)) {
+			if ($nb_matches > $i_max
+                && ($url_filter == false || preg_match($url_filter, $matches[$config['log_format']['url_index']]) > 0)
+                && ($ua_filter == false || str_contains($matches[$config['log_format']['ua_index']], $ua_filter))
+                && ($ip_filter == false || str_contains($matches[$config['log_format']['ip_index']], $ip_filter))
+            ) {
 		
 				// compute the timestamp
 				$timestamp = DateTime::createFromFormat($datetime_format, $matches[$config['log_format']['date_index']] . " " . $matches[$config['log_format']['time_index']] /* . " " . $matches[$config['log_format']['tz_index']] */)->getTimestamp();
@@ -114,7 +118,7 @@ class LogAnalyzer {
 					$index_max = max($index_max, $index);
 					
 					// Ok, now we store all data
-					$url = $matches[$config['log_format']['method_index']] . ' ' . $matches[$config['log_format']['url_index']];
+					$url = $matches[$config['log_format']['url_index']];
 					
 					// Requests
 					if (!array_key_exists((int)$index, $this->requests_histo)) {
@@ -137,7 +141,7 @@ class LogAnalyzer {
 
 						if (!array_key_exists($url, $this->bytes_list)) {
 							$this->bytes_list[$url] = [
-                                    'nb' => 0, // the order is important, for the display in table
+                                    'nb' => 0,
                                     'size' => 0,
                             ];
 						}
@@ -207,7 +211,7 @@ class LogAnalyzer {
 		    		$this->bytes_histo[$index] = 0;
 		    	} else {
 		    		// Change unit: byte => Mo
-		    		$this->bytes_histo[$index] = round($this->bytes_histo[$index] / 1024 / 1024);
+		    		$this->bytes_histo[$index] = round($this->bytes_histo[$index] / 1024);
 		    	}
 
 		    	// 404
@@ -236,9 +240,9 @@ class LogAnalyzer {
             return $item1['size'] < $item2['size'];
         });
 		$this->bytes_list = array_slice($this->bytes_list, 0, $config['nb_top_results'], true);
-		$this->bytes_total = round($this->bytes_total / 1024 / 1024); // byte => Mo
+		$this->bytes_total = round($this->bytes_total / 1024); // byte => Mo
 		foreach($this->bytes_list as $url => $bytes) {
-			$this->bytes_list[$url]['size'] = round($bytes['size'] / 1024 / 1024);
+			$this->bytes_list[$url]['size'] = round($bytes['size'] / 1024);
 		}
 
 		// Keep only the N top values for 404
@@ -311,7 +315,7 @@ class LogAnalyzer {
 	 * Display a detailed table
 	 * (@TODO in fact, has nothing to do in this class I guess :)
 	 */
-	public function displayTable($array, $total, $legends, $urlstrict) {
+	public function displayTable($array, $total, $legends, $callback) {
 		echo '<table class="table  table-bordered table-striped table-condensed"><thead><tr>';
         $cpt = 0;
         foreach($legends as $legend) {
@@ -324,64 +328,48 @@ class LogAnalyzer {
         }
         echo '</thead><tbody>';
         foreach($array as $label => $data) {
-			$urlPart = array($_SERVER['PHP_SELF']);
+            $urlPart = [];
 
-            if ($urlstrict) {
-				$urlPart[] = '?logpath=';
-				$urlPart[] = urlencode($_GET['logpath']);
+            $urlPart['logpath'] = $_GET['logpath'];
 
-				$urlPart[] = '&urlfilter=';
-				$urlPart[] = urlencode('^' . preg_quote($label, '/') . '$');
-
-				if (isset($_GET['histo_period'])) {
-					$urlPart[] = '&histo_period=';
-					$urlPart[] = $_GET['histo_period'];
-				}
-
-				if (isset($_GET['start_date'])) {
-					$urlPart[] = '&start_date=';
-					$urlPart[] = $_GET['start_date'];
-				}
-
-				if (isset($_GET['logfilter'])) {
-					$urlPart[] = '&logfilter=';
-					$urlPart[] = $_GET['logfilter'];
-				}
-
-				if (isset($_GET['nodep'])) {
-					$urlPart[] = '&nodep=';
-					$urlPart[] = $_GET['nodep'];
-				}
-
-            } else {
-				$urlPart[] = '?logpath=';
-				$urlPart[] = urlencode($_GET['logpath']);
-
-				if (isset($_GET['urlfilter'])) {
-					$urlPart[] = '&urlfilter=';
-					$urlPart[] = $_GET['urlfilter'];
-				}
-
-				if (isset($_GET['histo_period'])) {
-					$urlPart[] = '&histo_period=';
-					$urlPart[] = $_GET['histo_period'];
-				}
-
-				if (isset($_GET['start_date'])) {
-					$urlPart[] = '&start_date=';
-					$urlPart[] = $_GET['start_date'];
-				}
-
-				$urlPart[] = '&logfilter=';
-				$urlPart[] = urlencode(preg_quote($label, '/'));
-
-				if (isset($_GET['nodep'])) {
-					$urlPart[] = '&nodep=';
-					$urlPart[] = $_GET['nodep'];
-				}
+            if (isset($_GET['urlfilter'])) {
+                $urlPart['urlfilter'] = $_GET['urlfilter'];
             }
 
-            $drill_down_url =  implode($urlPart);
+            if (isset($_GET['histo_period'])) {
+                $urlPart['histo_period'] = $_GET['histo_period'];
+            }
+
+            if (isset($_GET['start_date'])) {
+                $urlPart['start_date'] = $_GET['start_date'];
+            }
+
+            if (isset($_GET['end_date'])) {
+                $urlPart['end_date'] = $_GET['end_date'];
+            }
+
+            if (isset($_GET['ip_filter'])) {
+                $urlPart['ip_filter'] = $_GET['ip_filter'];
+            }
+
+            if (isset($_GET['ua_filter'])) {
+                $urlPart['ua_filter'] = $_GET['ua_filter'];
+            }
+
+            if (isset($_GET['nodep'])) {
+                $urlPart['nodep'] = $_GET['nodep'];
+            }
+
+            if (isset($_GET['logfilter'])) {
+                $urlPart['logfilter'] = $_GET['logfilter'];
+            }
+
+            // Create custom link for the current table
+            $callback($label, $data, $urlPart);
+
+            $drill_down_url =  '?' . http_build_query($urlPart);
+
+
             // Display the URL
             echo '<tr><td class="col-first"><a title="drill down" href="' . $drill_down_url . '">' . $label . '</a></td>';
             // Display the data, but let's check first if this is a multidimensional value

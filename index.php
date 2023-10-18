@@ -18,12 +18,16 @@
 	<form class='well form-vertical'>
 		<label>Path Apache Log</label>
 		<input type='text' class='span5' name='logpath' value='<?php echo isset($_GET['logpath']) ? $_GET['logpath'] : '' ?>' />
-		<span class="help-block">Example: /var/log/apache2/access.log</span>
+		<span class="help-block">Example: /var/www/apache-histo/logs/access.log</span>
 		<label>URL Filter (regexp)</label>
 		<input type='text' class='span5' name='urlfilter' value='<?php echo isset($_GET['urlfilter']) ? $_GET['urlfilter'] : '' ?>' />
 		<span class="help-block">Example: \.jpg$</span>
 		<label>Exclude dependencies</label>
 		<input type='checkbox' class='span1' name='nodep' value='1' <?php echo isset($_GET['nodep']) && $_GET['nodep'] == '1' ? 'checked' : '' ?> />
+        <label>User Agent</label>
+        <input type='text' class='span5' name='ua_filter' value='<?php echo isset($_GET['ua_filter']) ? $_GET['ua_filter'] : '' ?>' />
+        <label>IP</label>
+        <input type='text' class='span5' name='ip_filter' value='<?php echo isset($_GET['ip_filter']) ? $_GET['ip_filter'] : '' ?>' />
 		<label>Log Filter (regexp)</label>
 		<input type='text' class='span5' name='logfilter' value='<?php echo isset($_GET['logfilter']) ? $_GET['logfilter'] : '' ?>' />
 		<span class="help-block">Example: Mozilla</span>
@@ -40,10 +44,22 @@
 	</form>
 <?php
 if (isset($_GET['logpath'])) {
-	$url_filter = isset($_GET['urlfilter']) ? $_GET['urlfilter'] : '';
-	if (trim($url_filter) == '') {
-		$url_filter = false;
-	}
+    $url_filter = isset($_GET['urlfilter']) ? $_GET['urlfilter'] : '';
+    if (trim($url_filter) == '') {
+        $url_filter = false;
+    }
+    $ua_filter = isset($_GET['ua_filter']) ? $_GET['ua_filter'] : '';
+    if (trim($ua_filter) == '') {
+        $ua_filter = false;
+    }
+    $ip_filter = isset($_GET['ip_filter']) ? $_GET['ip_filter'] : '';
+    if (trim($ip_filter) == '') {
+        $ip_filter = false;
+    }
+    $url_filter = isset($_GET['urlfilter']) ? $_GET['urlfilter'] : '';
+    if (trim($url_filter) == '') {
+        $url_filter = false;
+    }
 	$log_filter = isset($_GET['logfilter']) ? $_GET['logfilter'] : '';
 	if (trim($log_filter) == '') {
 		$log_filter = false;
@@ -62,7 +78,7 @@ if (isset($_GET['logpath'])) {
 
 	require_once('lib/lib.inc.php');
 	try {
-		$log = new LogAnalyzer($_GET['logpath'], $url_filter, $log_filter, $nodep, $start_date, $end_date, $_GET['histo_period']);
+		$log = new LogAnalyzer($_GET['logpath'], $url_filter, $ua_filter, $ip_filter, $log_filter, $nodep, $start_date, $end_date, $_GET['histo_period']);
 		include('lib/_log_results.php');
 	} catch (Exception $e) {
 	   echo "<div class='alert alert-error'> Error: " . $e->getMessage() . "</div>";

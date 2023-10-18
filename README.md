@@ -18,6 +18,8 @@ Installation
 
 Donwload the code or use the git repository.
 
+Run the app with docker-compose up
+
 The default install is configured to read the default combined Apache2 log format, but you can adjust the parser by editing config.inc.php
 
 You can also set other options in config.inc.php

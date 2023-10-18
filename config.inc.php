@@ -22,4 +22,4 @@ $config['log_format']['method_index'] = 7;
 $config['nb_bars_max'] = 1000;
 
 // Number of rows in the detail table
-$config['nb_top_results'] = 10;
+$config['nb_top_results'] = 100;
