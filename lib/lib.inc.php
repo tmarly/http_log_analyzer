@@ -39,6 +39,11 @@ class LogAnalyzer {
 	/** list of User Agents */
 	private $ua_list = array();
 
+	/** Minimum timestamp from filtered logs */
+	private $date_min = null;
+
+	/** Maximum timestamp from filtered logs */
+	private $date_max = null;
 
 	/** counter used to give a new id for each new graph */
 	private static $nb_histo_displayed = 0;
@@ -224,6 +229,10 @@ class LogAnalyzer {
 		    		$this->speed_histo[$index] = 0;
 		    	}
 		    }
+
+		    // Store min and max dates for auto-population
+		    $this->date_min = $index_min;
+		    $this->date_max = $index_max;
 		}
 		// sort histo by timestamp
 		ksort($this->requests_histo);
@@ -482,6 +491,20 @@ class LogAnalyzer {
 	 */
 	public function getUaList() {
 		return $this->ua_list;
+	}
+
+	/**
+	 * @return string|null Minimum date from filtered logs in format 'd/m/Y H:i', or null if no data
+	 */
+	public function getDateMin() {
+		return $this->date_min ? date('d/m/Y H:i', $this->date_min) : null;
+	}
+
+	/**
+	 * @return string|null Maximum date from filtered logs in format 'd/m/Y H:i', or null if no data
+	 */
+	public function getDateMax() {
+		return $this->date_max ? date('d/m/Y H:i', $this->date_max) : null;
 	}
 
 

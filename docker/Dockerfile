@@ -1,4 +1,7 @@
-FROM ubuntu:20.04
+FROM ubuntu:24.04
+
+# On utilise bash au lieu de sh
+SHELL ["/bin/bash", "-c"]
 
 # Timezone, we need to set it now otherwise will be interactively asked later
 ENV TZ=Europe/Paris
@@ -12,11 +15,11 @@ ARG UID
 ARG GID
 RUN \
   groupadd docker --non-unique -g ${GID} \
+  && userdel ubuntu \
   && useradd docker -u ${UID} -g ${GID} --shell /bin/bash --create-home \
   && usermod --append --groups sudo docker \
   && echo 'ALL ALL = (ALL) NOPASSWD: ALL' >> /etc/sudoers \
   && echo 'docker:secret' | chpasswd
-
 
 # =============================================================================
 # Usefull basic tools
